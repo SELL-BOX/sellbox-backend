@@ -14,6 +14,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.SimpMessageType;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,18 +37,16 @@ public class VideoController {
     private MediaPipeline pipeline;
     private UserSession presenterUserSession;
 
-    private final SimpMessageSendingOperations so;
+    private final SimpMessagingTemplate so;
 
     @MessageMapping("stream")
-    @SendToUser("/video/room")
-    public String videoStream(String msg, StompHeaderAccessor ha) throws IOException {
+    public void videoStream(String msg, StompHeaderAccessor ha) throws IOException {
         JsonObject jsonMessage = gson.fromJson(msg, JsonObject.class);
         log.info("Incoming message from session '{}': {}", ha.getSessionId(), jsonMessage);
-        String response = "";
         switch (jsonMessage.get("id").getAsString()) {
             case "presenter":
                 try {
-                    response = presenter(ha, jsonMessage);
+                    presenter(ha, jsonMessage);
                 } catch (Throwable t) {
                     handleErrorResponse(t, ha, "presenterResponse");
                 }
@@ -84,8 +83,6 @@ public class VideoController {
             default:
                 break;
         }
-
-        return response;
     }
 
     private void handleErrorResponse(Throwable throwable, StompHeaderAccessor ha, String responseId)
@@ -96,7 +93,8 @@ public class VideoController {
         response.addProperty("id", responseId);
         response.addProperty("response", "rejected");
         response.addProperty("message", throwable.getMessage());
-        so.convertAndSendToUser(ha.getSessionId(),"/video", response.toString());
+        so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString(), createHeaders(ha.getSessionId()));
+
     }
 
     private MessageHeaders createHeaders(@Nullable String sessionId) {
@@ -106,9 +104,9 @@ public class VideoController {
         return headerAccessor.getMessageHeaders();
     }
 
-    private synchronized String presenter(final StompHeaderAccessor ha, JsonObject jsonMessage)
+    private synchronized void presenter(final StompHeaderAccessor ha, JsonObject jsonMessage)
             throws IOException {
-        String rep = "";
+
         if (presenterUserSession == null) {
             presenterUserSession = new UserSession(ha.getSessionId());
 
@@ -126,7 +124,7 @@ public class VideoController {
                     response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
                     try {
                         synchronized (so) {
-                            so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString());
+                            so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString(), createHeaders(ha.getSessionId()));
                         }
                     } catch (Exception e) {
                         log.debug(e.getMessage());
@@ -141,7 +139,9 @@ public class VideoController {
             response.addProperty("id", "presenterResponse");
             response.addProperty("response", "accepted");
             response.addProperty("sdpAnswer", sdpAnswer);
-            rep =response.toString();
+            synchronized (so) {
+                so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString(), createHeaders(ha.getSessionId()));
+            }
 
             presenterWebRtc.gatherCandidates();
         } else {
@@ -150,10 +150,12 @@ public class VideoController {
             response.addProperty("response", "rejected");
             response.addProperty("message",
                     "Another user is currently acting as sender. Try again later ...");
-            rep =response.toString();
+            synchronized (so) {
+                so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString(), createHeaders(ha.getSessionId()));
+            }
         }
 
-        return rep;
+
     }
 
     private synchronized void viewer(final StompHeaderAccessor ha, JsonObject jsonMessage) throws IOException {
@@ -171,7 +173,8 @@ public class VideoController {
                 response.addProperty("response", "rejected");
                 response.addProperty("message", "You are already viewing in this session. "
                         + "Use a different browser to add additional viewers.");
-                so.convertAndSendToUser(ha.getSessionId(),"/video", response.toString());
+                so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString(), createHeaders(ha.getSessionId()));
+
                 return;
             }
             UserSession viewer = new UserSession(ha.getSessionId());
@@ -188,7 +191,7 @@ public class VideoController {
                     response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
                     try {
                         synchronized (so) {
-                            so.convertAndSendToUser(ha.getSessionId(),"/video", response);
+                            so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString(), createHeaders(ha.getSessionId()));
                         }
                     } catch (Exception e) {
                         log.debug(e.getMessage());
@@ -207,7 +210,7 @@ public class VideoController {
             response.addProperty("sdpAnswer", sdpAnswer.toString());
 
             synchronized (so) {
-                so.convertAndSendToUser(ha.getSessionId(),"/video", response.toString());
+                so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString(), createHeaders(ha.getSessionId()));
             }
             nextWebRtc.gatherCandidates();
         }
@@ -220,7 +223,7 @@ public class VideoController {
             for (UserSession viewer : viewers.values()) {
                 JsonObject response = new JsonObject();
                 response.addProperty("id", "stopCommunication");
-                so.convertAndSendToUser(ha.getSessionId(),"/video", response.toString());
+                so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString(), createHeaders(ha.getSessionId()));
             }
 
             log.info("Releasing media pipeline");
