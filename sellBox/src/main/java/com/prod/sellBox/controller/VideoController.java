@@ -126,7 +126,7 @@ public class VideoController {
                     response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
                     try {
                         synchronized (so) {
-                            so.convertAndSendToUser(ha.getSessionId(),"/video", response.toString());
+                            so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString());
                         }
                     } catch (Exception e) {
                         log.debug(e.getMessage());
@@ -143,9 +143,6 @@ public class VideoController {
             response.addProperty("sdpAnswer", sdpAnswer);
             rep =response.toString();
 
-            synchronized (so) {
-                so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString());
-            }
             presenterWebRtc.gatherCandidates();
         } else {
             JsonObject response = new JsonObject();
@@ -153,7 +150,6 @@ public class VideoController {
             response.addProperty("response", "rejected");
             response.addProperty("message",
                     "Another user is currently acting as sender. Try again later ...");
-            so.convertAndSendToUser(ha.getSessionId(),"/video", response.toString());
             rep =response.toString();
         }
 

@@ -1,6 +1,5 @@
 package com.prod.sellBox.config;
 
-import com.prod.sellBox.handler.StompHandler;
 import com.prod.sellBox.interceptor.StompHandshakeInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -16,7 +15,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")
-                .setHandshakeHandler(new StompHandler())
                 .addInterceptors(new StompHandshakeInterceptor());
     }
 
