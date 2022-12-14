@@ -4,18 +4,18 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.prod.sellBox.domain.UserSession;
+import com.prod.sellBox.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.kurento.client.*;
 import org.kurento.jsonrpc.JsonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,23 +39,25 @@ public class VideoController {
 
     private final SimpMessagingTemplate so;
 
-    @MessageMapping("stream")
-    public void videoStream(String msg, StompHeaderAccessor ha) throws IOException {
+    @MessageMapping("stream/room/{roomId}")
+    public synchronized void videoStream(String msg, StompHeaderAccessor ha, @DestinationVariable String roomId) throws IOException {
         JsonObject jsonMessage = gson.fromJson(msg, JsonObject.class);
         log.info("Incoming message from session '{}': {}", ha.getSessionId(), jsonMessage);
+        log.info("request roomID : {}", roomId);
+
         switch (jsonMessage.get("id").getAsString()) {
             case "presenter":
                 try {
-                    presenter(ha, jsonMessage);
+                    presenter(ha, jsonMessage, roomId);
                 } catch (Throwable t) {
-                    handleErrorResponse(t, ha, "presenterResponse");
+                    handleErrorResponse(t, ha, "presenterResponse", roomId);
                 }
                 break;
             case "viewer":
                 try {
-                    viewer(ha, jsonMessage);
+                    viewer(ha, jsonMessage, roomId);
                 } catch (Throwable t) {
-                    handleErrorResponse(t, ha, "viewerResponse");
+                    handleErrorResponse(t, ha, "viewerResponse", roomId);
                 }
                 break;
             case "onIceCandidate": {
@@ -78,22 +80,23 @@ public class VideoController {
                 break;
             }
             case "stop":
-                stop(ha);
+                stop(ha, roomId);
                 break;
             default:
                 break;
         }
     }
 
-    private void handleErrorResponse(Throwable throwable, StompHeaderAccessor ha, String responseId)
+    private void handleErrorResponse(Throwable throwable, StompHeaderAccessor ha, String responseId, String roomId)
             throws IOException {
-        stop(ha);
+        String destination = "/video/room/" + roomId;
+        stop(ha, roomId);
         log.error(throwable.getMessage(), throwable);
         JsonObject response = new JsonObject();
         response.addProperty("id", responseId);
         response.addProperty("response", "rejected");
         response.addProperty("message", throwable.getMessage());
-        so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString(), createHeaders(ha.getSessionId()));
+        so.convertAndSendToUser(ha.getSessionId(),destination, response.toString(), createHeaders(ha.getSessionId()));
 
     }
 
@@ -104,8 +107,9 @@ public class VideoController {
         return headerAccessor.getMessageHeaders();
     }
 
-    private synchronized void presenter(final StompHeaderAccessor ha, JsonObject jsonMessage)
-            throws IOException {
+    private synchronized void presenter(final StompHeaderAccessor ha, JsonObject jsonMessage, String roomId) {
+        String destination = "/video/room/" + roomId;
+        log.info("videoStream presenter destination : {}", destination);
 
         if (presenterUserSession == null) {
             presenterUserSession = new UserSession(ha.getSessionId());
@@ -124,7 +128,7 @@ public class VideoController {
                     response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
                     try {
                         synchronized (so) {
-                            so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString(), createHeaders(ha.getSessionId()));
+                            so.convertAndSendToUser(ha.getSessionId(),destination, response.toString(), createHeaders(ha.getSessionId()));
                         }
                     } catch (Exception e) {
                         log.debug(e.getMessage());
@@ -140,7 +144,7 @@ public class VideoController {
             response.addProperty("response", "accepted");
             response.addProperty("sdpAnswer", sdpAnswer);
             synchronized (so) {
-                so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString(), createHeaders(ha.getSessionId()));
+                so.convertAndSendToUser(ha.getSessionId(),destination, response.toString(), createHeaders(ha.getSessionId()));
             }
 
             presenterWebRtc.gatherCandidates();
@@ -151,14 +155,17 @@ public class VideoController {
             response.addProperty("message",
                     "Another user is currently acting as sender. Try again later ...");
             synchronized (so) {
-                so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString(), createHeaders(ha.getSessionId()));
+                so.convertAndSendToUser(ha.getSessionId(),destination, response.toString(), createHeaders(ha.getSessionId()));
             }
         }
 
 
     }
 
-    private synchronized void viewer(final StompHeaderAccessor ha, JsonObject jsonMessage) throws IOException {
+    private synchronized void viewer(final StompHeaderAccessor ha, JsonObject jsonMessage, String roomId) {
+        String destination = "/video/room/" + roomId;
+        log.info("videoStream viewer destination : {}", destination);
+
         if (presenterUserSession == null || presenterUserSession.getWebRtcEndpoint() == null) {
             JsonObject response = new JsonObject();
             response.addProperty("id", "viewerResponse");
@@ -217,7 +224,10 @@ public class VideoController {
     }
 
 
-    private synchronized void stop(StompHeaderAccessor ha) throws IOException {
+    private synchronized void stop(StompHeaderAccessor ha, String roomId) throws IOException {
+        String destination = "/video/room/" + roomId;
+        log.info("videoStream stop destination : {}", destination);
+
         String sessionId = ha.getSessionId();
         if (presenterUserSession != null && presenterUserSession.getSessionId().equals(sessionId)) {
             for (UserSession viewer : viewers.values()) {
