@@ -40,4 +40,20 @@ public class RoomController {
         log.info("request enterRoom : {}", roomId);
         return roomRepository.findById(roomId);
     }
+
+    @DeleteMapping("/{roomId}/delete")
+    public String deleteRoom(@PathVariable String roomId) {
+        log.info("request deleteRoom : {}", roomId);
+
+        int result = roomRepository.deleteById(roomId);
+        String msg = "";
+
+        if (result == 1) {
+            msg = "방을 제거했습니다 roomId : ." + roomId;
+        } else {
+            msg = "존재하지 않는 방입니다.";
+        }
+
+        return msg;
+    }
 }

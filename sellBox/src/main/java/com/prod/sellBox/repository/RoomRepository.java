@@ -25,6 +25,15 @@ public class RoomRepository {
         return store.get(roomId);
     }
 
+    public int deleteById(String roomId) {
+        if (store.contains(roomId)) {
+            store.remove(roomId);
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
     public void clearStore() {
         store.clear();
     }
