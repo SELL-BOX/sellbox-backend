@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin("http://localhost:3000")
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -28,7 +29,7 @@ public class RoomController {
         return newRoom;
     }
 
-    @GetMapping("/")
+    @GetMapping("")
     public List<RoomInfo> roomList() {
         log.info("request roomList");
         return roomRepository.findAll();

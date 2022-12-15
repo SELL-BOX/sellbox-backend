@@ -172,7 +172,7 @@ public class VideoController {
             response.addProperty("response", "rejected");
             response.addProperty("message",
                     "No active sender now. Become sender or . Try again later ...");
-            so.convertAndSendToUser(ha.getSessionId(),"/video", response.toString());
+            so.convertAndSendToUser(ha.getSessionId(),destination, response.toString());
         } else {
             if (viewers.containsKey(ha.getSessionId())) {
                 JsonObject response = new JsonObject();
@@ -180,7 +180,7 @@ public class VideoController {
                 response.addProperty("response", "rejected");
                 response.addProperty("message", "You are already viewing in this session. "
                         + "Use a different browser to add additional viewers.");
-                so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString(), createHeaders(ha.getSessionId()));
+                so.convertAndSendToUser(ha.getSessionId(),destination, response.toString(), createHeaders(ha.getSessionId()));
 
                 return;
             }
@@ -198,7 +198,7 @@ public class VideoController {
                     response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
                     try {
                         synchronized (so) {
-                            so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString(), createHeaders(ha.getSessionId()));
+                            so.convertAndSendToUser(ha.getSessionId(),destination, response.toString(), createHeaders(ha.getSessionId()));
                         }
                     } catch (Exception e) {
                         log.debug(e.getMessage());
@@ -217,7 +217,7 @@ public class VideoController {
             response.addProperty("sdpAnswer", sdpAnswer.toString());
 
             synchronized (so) {
-                so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString(), createHeaders(ha.getSessionId()));
+                so.convertAndSendToUser(ha.getSessionId(),destination, response.toString(), createHeaders(ha.getSessionId()));
             }
             nextWebRtc.gatherCandidates();
         }
@@ -233,7 +233,7 @@ public class VideoController {
             for (UserSession viewer : viewers.values()) {
                 JsonObject response = new JsonObject();
                 response.addProperty("id", "stopCommunication");
-                so.convertAndSendToUser(ha.getSessionId(),"/video/room", response.toString(), createHeaders(ha.getSessionId()));
+                so.convertAndSendToUser(ha.getSessionId(),destination, response.toString(), createHeaders(ha.getSessionId()));
             }
 
             log.info("Releasing media pipeline");
