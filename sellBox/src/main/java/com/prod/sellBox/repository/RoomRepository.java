@@ -1,6 +1,7 @@
 package com.prod.sellBox.repository;
 
 import com.prod.sellBox.domain.RoomInfo;
+import com.prod.sellBox.dto.DeleteRoomResult;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -25,16 +26,12 @@ public class RoomRepository {
         return store.get(roomId);
     }
 
-    public int deleteById(String roomId) {
+    public DeleteRoomResult deleteById(String roomId) {
         if (store.contains(roomId)) {
             store.remove(roomId);
-            return 1;
+            return DeleteRoomResult.SUCCESS;
         } else {
-            return 0;
+            return DeleteRoomResult.FAIL;
         }
-    }
-
-    public void clearStore() {
-        store.clear();
     }
 }

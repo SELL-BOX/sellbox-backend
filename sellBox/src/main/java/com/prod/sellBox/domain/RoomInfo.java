@@ -1,9 +1,18 @@
 package com.prod.sellBox.domain;
 
-import lombok.Data;
+import lombok.Getter;
 
-@Data
+@Getter
 public class RoomInfo {
-
+    int Id;
     String roomId;
+    String roomName;
+    String hostId;
+
+    public RoomInfo(int id, String roomId, String roomName, String hostId) {
+        Id = id;
+        this.roomId = roomId;
+        this.roomName = roomName;
+        this.hostId = hostId;
+    }
 }

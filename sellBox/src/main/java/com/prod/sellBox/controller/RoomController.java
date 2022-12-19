@@ -1,35 +1,36 @@
 package com.prod.sellBox.controller;
 
 import com.prod.sellBox.domain.RoomInfo;
+import com.prod.sellBox.dto.RoomDto;
 import com.prod.sellBox.repository.RoomRepository;
-import com.prod.sellBox.vo.RoomVo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @CrossOrigin("http://localhost:3000")
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-@RequestMapping("/rooms")
+@RequestMapping("/api/v1/rooms")
 public class RoomController {
 
-    RoomRepository roomRepository = new RoomRepository();
+    RoomRepository roomRepository;
+    private static int sequence = 0;
 
-    @PostMapping("/create")
-    public RoomInfo createRoom(@RequestBody RoomVo roomInfo) {
-        log.info("create Room : {}", roomInfo.toString());
+    @PostMapping
+    public RoomInfo createRoom(@RequestBody RoomDto room) {
+        log.info("create Room : {}", room.toString());
 
-        RoomInfo newRoom = new RoomInfo();
-        newRoom.setRoomId(roomInfo.getRoomId());
+        RoomInfo newRoom = new RoomInfo(++sequence, UUID.randomUUID().toString(), room.getRoomName(), "testId");
         roomRepository.save(newRoom);
 
         return newRoom;
     }
 
-    @GetMapping("")
+    @GetMapping
     public List<RoomInfo> roomList() {
         log.info("request roomList");
         return roomRepository.findAll();
@@ -41,19 +42,9 @@ public class RoomController {
         return roomRepository.findById(roomId);
     }
 
-    @DeleteMapping("/{roomId}/delete")
+    @DeleteMapping("/{roomId}")
     public String deleteRoom(@PathVariable String roomId) {
         log.info("request deleteRoom : {}", roomId);
-
-        int result = roomRepository.deleteById(roomId);
-        String msg = "";
-
-        if (result == 1) {
-            msg = "방을 제거했습니다 roomId : ." + roomId;
-        } else {
-            msg = "존재하지 않는 방입니다.";
-        }
-
-        return msg;
+        return roomRepository.deleteById(roomId).getMsg();
     }
 }
