@@ -21,6 +21,7 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation group: 'org.webjars', name: 'sockjs-client', version: '1.1.1'
 	implementation 'org.webjars:stomp-websocket:2.3.3'
 	implementation group: 'org.kurento', name: 'kurento-client', version: '6.18.0'

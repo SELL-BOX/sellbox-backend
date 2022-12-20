@@ -17,7 +17,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/rooms")
 public class RoomController {
 
-    RoomRepository roomRepository;
+    private final RoomRepository roomRepository;
     private static int sequence = 0;
 
     @PostMapping
