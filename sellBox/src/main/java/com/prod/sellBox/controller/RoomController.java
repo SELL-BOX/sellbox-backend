@@ -23,8 +23,13 @@ public class RoomController {
     @PostMapping
     public RoomInfo createRoom(@RequestBody RoomDto room) {
         log.info("create Room : {}", room.toString());
+        RoomInfo newRoom = RoomInfo.builder()
+                        .id(++sequence)
+                        .roomId(UUID.randomUUID().toString())
+                        .roomName(room.getRoomName())
+                        .hostId("test" + sequence)
+                        .build();
 
-        RoomInfo newRoom = new RoomInfo(++sequence, UUID.randomUUID().toString(), room.getRoomName(), "testId");
         roomRepository.save(newRoom);
 
         return newRoom;

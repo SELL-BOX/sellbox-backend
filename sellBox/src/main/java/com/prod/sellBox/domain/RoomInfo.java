@@ -1,5 +1,6 @@
 package com.prod.sellBox.domain;
 
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
@@ -9,6 +10,8 @@ public class RoomInfo {
     String roomName;
     String hostId;
 
+
+    @Builder
     public RoomInfo(int id, String roomId, String roomName, String hostId) {
         Id = id;
         this.roomId = roomId;
