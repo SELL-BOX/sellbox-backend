@@ -1,6 +1,7 @@
 package com.prod.sellBox.service;
 
 import com.prod.sellBox.domain.User;
+import com.prod.sellBox.domain.UserEntity;
 import com.prod.sellBox.dto.UserDto;
 import com.prod.sellBox.dto.UserRole;
 import com.prod.sellBox.repository.UserRepository;
@@ -9,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -17,11 +19,12 @@ import org.springframework.stereotype.Component;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     public boolean signUp(UserDto userDto) {
         User newUser = User.builder()
                 .userId(userDto.getUserId())
-                .userPw(userDto.getUserPw())
+                .userPw(passwordEncoder.encode(userDto.getUserPw()))
                 .email(userDto.getEmail())
                 .role(UserRole.ROLE_VIEWER)
                 .build();
@@ -39,10 +42,6 @@ public class UserService implements UserDetailsService {
             throw new UsernameNotFoundException(userId);
         }
 
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getUserId())
-                .password(user.getUserPw())
-                .roles(user.getRole().toString())
-                .build();
+        return new UserEntity(user);
     }
 }
