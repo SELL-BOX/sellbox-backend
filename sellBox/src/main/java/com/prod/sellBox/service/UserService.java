@@ -2,6 +2,7 @@ package com.prod.sellBox.service;
 
 import com.prod.sellBox.domain.User;
 import com.prod.sellBox.domain.UserEntity;
+import com.prod.sellBox.dto.LoginDto;
 import com.prod.sellBox.dto.UserDto;
 import com.prod.sellBox.dto.UserRole;
 import com.prod.sellBox.repository.UserRepository;
@@ -19,17 +20,20 @@ import org.springframework.stereotype.Component;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
 
     public boolean signUp(UserDto userDto) {
         User newUser = User.builder()
                 .userId(userDto.getUserId())
-                .userPw(passwordEncoder.encode(userDto.getUserPw()))
+                .userPw(userDto.getUserPw())
                 .email(userDto.getEmail())
                 .role(UserRole.ROLE_VIEWER)
                 .build();
 
         return userRepository.save(newUser);
+    }
+
+    public User login(LoginDto loginDto) {
+        return userRepository.findUserById(loginDto.getUserId());
     }
 
     @Override
