@@ -25,9 +25,9 @@ public class UserController {
     private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping
-    public String signUp(@RequestBody UserDto userDto) { // 회원등록
+    public void signUp(@RequestBody UserDto userDto) { // 회원등록
         log.info("sign up user : {}", userDto.getUserId());
-        return userService.signUp(userDto) ? "success" : "fail (이미 존재하는 ID)";
+        userService.save(userDto);
     }
 
     @PostMapping("/login")

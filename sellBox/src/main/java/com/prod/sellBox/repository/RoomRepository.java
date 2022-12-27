@@ -1,9 +1,12 @@
 package com.prod.sellBox.repository;
 
 import com.prod.sellBox.domain.RoomInfo;
+import com.prod.sellBox.domain.User;
 import com.prod.sellBox.dto.DeleteRoomResult;
 import org.springframework.stereotype.Repository;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,27 +14,27 @@ import java.util.concurrent.ConcurrentHashMap;
 @Repository
 public class RoomRepository {
 
-    private static final ConcurrentHashMap<String, RoomInfo> store = new ConcurrentHashMap<>();
+    @PersistenceContext
+    private EntityManager em;
 
-    public RoomInfo save(RoomInfo room) {
-        store.put(room.getRoomId(), room);
-        return room;
+    public long save(RoomInfo room) {
+        em.persist(room);
+
+        return room.getId();
     }
 
     public List<RoomInfo> findAll() {
-        return new ArrayList<>(store.values());
+        return em.createQuery("select r from RoomInfo r",RoomInfo.class).getResultList();
     }
 
-    public RoomInfo findById(String roomId) {
-        return store.get(roomId);
+    public RoomInfo findById(Long roomId) {
+        return em.createQuery("select r from RoomInfo r where r.Id = :roomId", RoomInfo.class)
+                .setParameter("roomId", roomId)
+                .getSingleResult();
     }
 
-    public DeleteRoomResult deleteById(String roomId) {
-        if (store.contains(roomId)) {
-            store.remove(roomId);
-            return DeleteRoomResult.SUCCESS;
-        } else {
-            return DeleteRoomResult.FAIL;
-        }
+    public void deleteById(Long roomId) {
+        em.remove(findById(roomId));
     }
+
 }

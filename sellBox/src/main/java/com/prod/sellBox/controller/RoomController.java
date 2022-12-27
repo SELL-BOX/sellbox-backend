@@ -1,55 +1,52 @@
 package com.prod.sellBox.controller;
 
 import com.prod.sellBox.domain.RoomInfo;
+import com.prod.sellBox.domain.UserEntity;
 import com.prod.sellBox.dto.RoomDto;
 import com.prod.sellBox.repository.RoomRepository;
+import com.prod.sellBox.service.RoomService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
 
-@CrossOrigin("http://localhost:3000")
 @RestController
 @RequiredArgsConstructor
 @Slf4j
 @RequestMapping("/api/v1/rooms")
 public class RoomController {
 
-    private final RoomRepository roomRepository;
-    private static int sequence = 0;
+    private final RoomService roomService;
 
     @PostMapping
-    public RoomInfo createRoom(@RequestBody RoomDto room) {
+    public long createRoom(@RequestBody RoomDto room, @AuthenticationPrincipal UserEntity user) {
         log.info("create Room : {}", room.toString());
         RoomInfo newRoom = RoomInfo.builder()
-                        .id(++sequence)
-                        .roomId(UUID.randomUUID().toString())
                         .roomName(room.getRoomName())
-                        .hostId("test" + sequence)
+                        .hostId(user.getUser().getUserId())
                         .build();
 
-        roomRepository.save(newRoom);
-
-        return newRoom;
+        return roomService.save(newRoom);
     }
 
     @GetMapping
     public List<RoomInfo> roomList() {
         log.info("request roomList");
-        return roomRepository.findAll();
+        return roomService.findAll();
     }
 
     @GetMapping("/{roomId}")
-    public RoomInfo enterRoom(@PathVariable String roomId) {
+    public RoomInfo enterRoom(@PathVariable Long roomId) {
         log.info("request enterRoom : {}", roomId);
-        return roomRepository.findById(roomId);
+        return roomService.findById(roomId);
     }
 
     @DeleteMapping("/{roomId}")
-    public String deleteRoom(@PathVariable String roomId) {
+    public void deleteRoom(@PathVariable Long roomId) {
         log.info("request deleteRoom : {}", roomId);
-        return roomRepository.deleteById(roomId).getMsg();
+        roomService.deleteById(roomId);
     }
 }

@@ -11,17 +11,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
-@Component
+@Service
+@Transactional
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
-    public boolean signUp(UserDto userDto) {
+    public void save(UserDto userDto) {
         User newUser = User.builder()
                 .userId(userDto.getUserId())
                 .userPw(userDto.getUserPw())
@@ -29,18 +30,18 @@ public class UserService implements UserDetailsService {
                 .role(UserRole.ROLE_VIEWER)
                 .build();
 
-        return userRepository.save(newUser);
+        userRepository.save(newUser);
     }
 
     public User login(LoginDto loginDto) {
-        return userRepository.findUserById(loginDto.getUserId());
+        return userRepository.findByUserId(loginDto.getUserId());
     }
 
     @Override
     public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
         log.info("loadUserByUsername 진입");
 
-        User user = userRepository.findUserById(userId);
+        User user = userRepository.findByUserId(userId);
 
         if (user == null) {
             throw new UsernameNotFoundException(userId);
