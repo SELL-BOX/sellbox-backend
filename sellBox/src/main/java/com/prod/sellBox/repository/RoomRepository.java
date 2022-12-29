@@ -28,9 +28,7 @@ public class RoomRepository {
     }
 
     public RoomInfo findById(Long roomId) {
-        return em.createQuery("select r from RoomInfo r where r.Id = :roomId", RoomInfo.class)
-                .setParameter("roomId", roomId)
-                .getSingleResult();
+        return em.find(RoomInfo.class, roomId);
     }
 
     public void deleteById(Long roomId) {

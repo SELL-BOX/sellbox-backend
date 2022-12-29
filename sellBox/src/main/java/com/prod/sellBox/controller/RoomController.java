@@ -3,7 +3,6 @@ package com.prod.sellBox.controller;
 import com.prod.sellBox.domain.RoomInfo;
 import com.prod.sellBox.domain.UserEntity;
 import com.prod.sellBox.dto.RoomDto;
-import com.prod.sellBox.repository.RoomRepository;
 import com.prod.sellBox.service.RoomService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +10,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,6 +25,7 @@ public class RoomController {
         RoomInfo newRoom = RoomInfo.builder()
                         .roomName(room.getRoomName())
                         .hostId(user.getUser().getUserId())
+                        .thumbnailId(room.getThumbnailId())
                         .build();
 
         return roomService.save(newRoom);
@@ -44,9 +43,16 @@ public class RoomController {
         return roomService.findById(roomId);
     }
 
+    @PostMapping("/{roomId}")
+    public void editRoom(@RequestBody RoomDto newRoom, @PathVariable Long roomId) {
+        RoomInfo room = roomService.findById(roomId);
+        room.editName(newRoom.getRoomName());
+    }
+
     @DeleteMapping("/{roomId}")
     public void deleteRoom(@PathVariable Long roomId) {
         log.info("request deleteRoom : {}", roomId);
         roomService.deleteById(roomId);
     }
+
 }
