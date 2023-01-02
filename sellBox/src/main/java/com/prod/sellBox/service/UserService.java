@@ -34,21 +34,25 @@ public class UserService implements UserDetailsService {
     }
 
     public User login(LoginDto loginDto) {
-        return userRepository.findByUserId(loginDto.getUserId());
+        return userRepository.findByUserId(loginDto.getUserId()).get();
     }
 
     public User findByUserId(String userId) {
-        return userRepository.findByUserId(userId);
+        if (userRepository.existsByUserId(userId)) {
+            return userRepository.findByUserId(userId).get();
+        }
+
+        return null;
     }
 
     @Override
     public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
         log.info("loadUserByUsername 진입");
-
-        User user = userRepository.findByUserId(userId);
-
-        if (user == null) {
+        User user = null;
+        if (userRepository.findByUserId(userId).isEmpty()) {
             throw new UsernameNotFoundException(userId);
+        } else {
+            user = userRepository.findByUserId(userId).get();
         }
 
         return new UserEntity(user);
