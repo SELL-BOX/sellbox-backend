@@ -27,7 +27,11 @@ public class UserController {
     @PostMapping
     public void signUp(@RequestBody UserDto userDto) { // 회원등록
         log.info("sign up user : {}", userDto.getUserId());
-        userService.save(userDto);
+        if (userService.findByUserId(userDto.getUserId()) == null) {
+            userService.save(userDto);
+        } else {
+            throw new IllegalStateException("이미 존재하는 사용자입니다.");
+        }
     }
 
     @PostMapping("/login")

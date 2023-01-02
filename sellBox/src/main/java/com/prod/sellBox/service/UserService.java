@@ -27,7 +27,7 @@ public class UserService implements UserDetailsService {
                 .userId(userDto.getUserId())
                 .userPw(userDto.getUserPw())
                 .email(userDto.getEmail())
-                .role(UserRole.ROLE_VIEWER)
+                .role(setRole(userDto.getRole()))
                 .build();
 
         userRepository.save(newUser);
@@ -35,6 +35,10 @@ public class UserService implements UserDetailsService {
 
     public User login(LoginDto loginDto) {
         return userRepository.findByUserId(loginDto.getUserId());
+    }
+
+    public User findByUserId(String userId) {
+        return userRepository.findByUserId(userId);
     }
 
     @Override
@@ -48,5 +52,14 @@ public class UserService implements UserDetailsService {
         }
 
         return new UserEntity(user);
+    }
+
+
+    private UserRole setRole(String role) {
+        if (role.equals("presenter")) {
+            return UserRole.ROLE_PRESENTER;
+        } else {
+            return UserRole.ROLE_VIEWER;
+        }
     }
 }
