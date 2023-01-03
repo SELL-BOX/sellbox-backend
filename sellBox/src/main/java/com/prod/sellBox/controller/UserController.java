@@ -2,14 +2,11 @@ package com.prod.sellBox.controller;
 
 import com.prod.sellBox.config.jwt.JwtTokenProvider;
 import com.prod.sellBox.domain.User;
-import com.prod.sellBox.domain.UserEntity;
 import com.prod.sellBox.dto.LoginDto;
 import com.prod.sellBox.dto.UserDto;
-import com.prod.sellBox.repository.UserRepository;
 import com.prod.sellBox.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
