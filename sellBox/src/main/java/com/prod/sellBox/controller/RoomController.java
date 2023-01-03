@@ -1,6 +1,7 @@
 package com.prod.sellBox.controller;
 
 import com.prod.sellBox.domain.RoomInfo;
+import com.prod.sellBox.domain.Thumbnail;
 import com.prod.sellBox.domain.UserEntity;
 import com.prod.sellBox.dto.RoomDto;
 import com.prod.sellBox.service.RoomService;
@@ -10,6 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,12 +22,12 @@ public class RoomController {
     private final RoomService roomService;
 
     @PostMapping
-    public long createRoom(@RequestBody RoomDto room, @AuthenticationPrincipal UserEntity user) {
+    public RoomInfo createRoom(@RequestBody RoomDto room, @AuthenticationPrincipal UserEntity user) {
         log.info("create Room : {}", room.toString());
         RoomInfo newRoom = RoomInfo.builder()
                         .roomName(room.getRoomName())
                         .hostId(user.getUser().getUserId())
-                        .thumbnailId(room.getThumbnailId())
+                        .thumbnail(new Thumbnail(UUID.randomUUID().toString()))
                         .build();
 
         return roomService.save(newRoom);
@@ -43,16 +45,26 @@ public class RoomController {
         return roomService.findById(roomId);
     }
 
-    @PostMapping("/{roomId}")
+    @PostMapping("/{roomId}/edit")
     public void editRoom(@RequestBody RoomDto newRoom, @PathVariable Long roomId) {
         RoomInfo room = roomService.findById(roomId);
         room.editName(newRoom.getRoomName());
     }
 
-    @DeleteMapping("/{roomId}")
+    @PostMapping("/{roomId}/delete")
     public void deleteRoom(@PathVariable Long roomId) {
         log.info("request deleteRoom : {}", roomId);
         roomService.deleteById(roomId);
+    }
+
+    @PostMapping("/{roomId}/{thumbnailId}")
+    public void updateThumbnail(@RequestBody Thumbnail thumbnail) {
+        roomService.updateThumbnail(thumbnail);
+    }
+
+    @GetMapping("/{roomId}/{thumbnailId}")
+    public Thumbnail getThumbnail(@PathVariable String thumbnailId) {
+        return roomService.getThumbnail(thumbnailId);
     }
 
 }
