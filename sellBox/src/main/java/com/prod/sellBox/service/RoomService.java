@@ -1,9 +1,7 @@
 package com.prod.sellBox.service;
 
 import com.prod.sellBox.domain.RoomInfo;
-import com.prod.sellBox.domain.Thumbnail;
 import com.prod.sellBox.repository.RoomRepository;
-import com.prod.sellBox.repository.ThumbnailRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,7 +16,6 @@ import java.util.List;
 public class RoomService {
 
     private final RoomRepository roomRepository;
-    private final ThumbnailRepository thumbnailRepository;
 
     public RoomInfo save(RoomInfo room) {
         return roomRepository.save(room);
@@ -36,15 +33,5 @@ public class RoomService {
         roomRepository.deleteById(roomId);
     }
 
-    public void updateThumbnail(Thumbnail thumbnail) {
-        Thumbnail tmpThumbnail = thumbnailRepository.findById(thumbnail.getThumbnailId()).get();
-        thumbnail.setImageSource(tmpThumbnail.getImageSource());
-    }
 
-    public Thumbnail getThumbnail(String thumbnailId) {
-        if (thumbnailRepository.existsById(thumbnailId)) {
-            return thumbnailRepository.findById(thumbnailId).get();
-        }
-        return null;
-    }
 }

@@ -45,26 +45,15 @@ public class RoomController {
         return roomService.findById(roomId);
     }
 
-    @PostMapping("/{roomId}/edit")
+    @PatchMapping("/{roomId}")
     public void editRoom(@RequestBody RoomDto newRoom, @PathVariable Long roomId) {
         RoomInfo room = roomService.findById(roomId);
         room.editName(newRoom.getRoomName());
     }
 
-    @PostMapping("/{roomId}/delete")
+    @DeleteMapping("/{roomId}/delete")
     public void deleteRoom(@PathVariable Long roomId) {
         log.info("request deleteRoom : {}", roomId);
         roomService.deleteById(roomId);
     }
-
-    @PostMapping("/{roomId}/{thumbnailId}")
-    public void updateThumbnail(@RequestBody Thumbnail thumbnail) {
-        roomService.updateThumbnail(thumbnail);
-    }
-
-    @GetMapping("/{roomId}/{thumbnailId}")
-    public Thumbnail getThumbnail(@PathVariable String thumbnailId) {
-        return roomService.getThumbnail(thumbnailId);
-    }
-
 }
