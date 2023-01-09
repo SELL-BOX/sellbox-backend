@@ -5,6 +5,9 @@ import com.prod.sellBox.repository.ThumbnailRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Service
 @Transactional
@@ -20,9 +23,9 @@ public class ThumbnailService {
         return null;
     }
 
-    public void updateThumbnail(Thumbnail thumbnail) {
+    public void updateThumbnail(Thumbnail thumbnail, MultipartFile imgFile) throws IOException {
         Thumbnail tmpThumbnail = thumbnailRepository.findById(thumbnail.getThumbnailId()).get();
-        thumbnail.setImageSource(tmpThumbnail.getImageSource());
+        tmpThumbnail.setImageSource(imgFile.getBytes());
     }
 
     public void deleteThumbnail(String thumbnailId) {

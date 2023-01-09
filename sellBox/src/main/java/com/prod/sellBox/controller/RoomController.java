@@ -7,9 +7,12 @@ import com.prod.sellBox.dto.RoomDto;
 import com.prod.sellBox.service.RoomService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,13 +24,15 @@ public class RoomController {
 
     private final RoomService roomService;
 
-    @PostMapping
-    public RoomInfo createRoom(@RequestBody RoomDto room, @AuthenticationPrincipal UserEntity user) {
+    @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    public RoomInfo createRoom(@RequestPart RoomDto room,
+                               @RequestPart MultipartFile imgFile,
+                               @AuthenticationPrincipal UserEntity user) throws IOException {
         log.info("create Room : {}", room.toString());
         RoomInfo newRoom = RoomInfo.builder()
                         .roomName(room.getRoomName())
                         .hostId(user.getUser().getUserId())
-                        .thumbnail(new Thumbnail(UUID.randomUUID().toString()))
+                        .thumbnail(new Thumbnail(UUID.randomUUID().toString(), imgFile.getBytes()))
                         .build();
 
         return roomService.save(newRoom);
