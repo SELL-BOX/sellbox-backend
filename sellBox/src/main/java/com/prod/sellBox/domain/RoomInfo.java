@@ -1,5 +1,6 @@
 package com.prod.sellBox.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class RoomInfo {
     private String roomName;
     private String hostId;
 
+    @JsonIgnore
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "thumbnail_id")
     private Thumbnail thumbnail;
