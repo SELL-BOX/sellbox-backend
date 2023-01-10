@@ -36,8 +36,13 @@ public class UserController {
         log.info("Try Login : {}", loginDto.getUserId());
 
         User user = userService.login(loginDto);
-
-        if (user == null) return "가입되지 않은 사용자 입니다.";
+        if (user == null) {
+            throw new IllegalArgumentException("존재하지않는 유저입니다.");
+        }
+        
+        if (!user.getUserPw().equals(loginDto.getUserPw())) {
+            throw new IllegalArgumentException("잘못된 비밀번호입니다.");
+        }
 
         return jwtTokenProvider.createToken(user.getUserId(), user.getRole().toString());
     }
