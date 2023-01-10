@@ -26,10 +26,7 @@ public class RoomInfo {
     private String roomName;
     private String hostId;
 
-    @JsonIgnore
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "thumbnail_id")
-    private Thumbnail thumbnail;
+    private String thumbnailId;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
     private List<User> userList;
@@ -38,10 +35,10 @@ public class RoomInfo {
     private LocalDateTime createdDate;
 
     @Builder
-    public RoomInfo(String roomName, String hostId, Thumbnail thumbnail) {
+    public RoomInfo(String roomName, String hostId, String thumbnailId) {
         this.roomName = roomName;
         this.hostId = hostId;
-        this.thumbnail = thumbnail;
+        this.thumbnailId = thumbnailId;
     }
 
     public void editName(String roomName) {

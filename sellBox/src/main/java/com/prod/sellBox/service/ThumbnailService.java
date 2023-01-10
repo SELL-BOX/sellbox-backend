@@ -16,6 +16,13 @@ public class ThumbnailService {
 
     private final ThumbnailRepository thumbnailRepository;
 
+    public Thumbnail saveThumbnail(String thumbnailId, MultipartFile imgFile) throws IOException {
+        Thumbnail thumbnail = new Thumbnail(thumbnailId, imgFile.getBytes());
+        thumbnailRepository.save(thumbnail);
+
+        return thumbnail;
+    }
+
     public Thumbnail getThumbnail(String thumbnailId) {
         if (thumbnailRepository.existsById(thumbnailId)) {
             return thumbnailRepository.findById(thumbnailId).get();
