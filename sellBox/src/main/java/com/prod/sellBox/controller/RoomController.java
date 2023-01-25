@@ -1,5 +1,6 @@
 package com.prod.sellBox.controller;
 
+import com.prod.sellBox.config.redis.RedisSubscriber;
 import com.prod.sellBox.domain.RoomInfo;
 import com.prod.sellBox.domain.Thumbnail;
 import com.prod.sellBox.domain.UserEntity;
@@ -8,13 +9,19 @@ import com.prod.sellBox.service.RoomService;
 import com.prod.sellBox.service.ThumbnailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -25,6 +32,18 @@ public class RoomController {
 
     private final RoomService roomService;
     private final ThumbnailService thumbnailService;
+
+    private final RedisMessageListenerContainer redisMessageListener;
+    private final RedisSubscriber redisSubscriber;
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    private Map<String, ChannelTopic> topics;
+
+
+    @PostConstruct
+    private void init() {
+        topics = new HashMap<>();
+    }
 
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public RoomInfo createRoom(@RequestPart RoomDto room,
@@ -54,6 +73,15 @@ public class RoomController {
     @GetMapping("/{roomId}")
     public RoomInfo enterRoom(@PathVariable Long roomId) {
         log.info("request enterRoom : {}", roomId);
+
+        String sRoomId = roomId.toString();
+
+        ChannelTopic topic = topics.get(sRoomId);
+        if (topic == null)
+            topic = new ChannelTopic(sRoomId);
+        redisMessageListener.addMessageListener(redisSubscriber, topic);
+        topics.put(sRoomId, topic);
+
         return roomService.findById(roomId);
     }
 
@@ -67,5 +95,9 @@ public class RoomController {
     public void deleteRoom(@PathVariable Long roomId) {
         log.info("request deleteRoom : {}", roomId);
         roomService.deleteById(roomId);
+    }
+
+    public ChannelTopic getTopic(String roomId) {
+        return topics.get(roomId);
     }
 }
